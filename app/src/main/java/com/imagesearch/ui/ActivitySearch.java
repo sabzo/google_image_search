@@ -1,13 +1,14 @@
 package com.imagesearch.ui;
 
+import android.content.Intent;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
+import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.Toast;
 
@@ -25,12 +26,11 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 
 public class ActivitySearch extends AppCompatActivity {
-    EditText etQuery;
-    Button btnSearch;
     GridView gvResults;
     AdapterImage imgAdapter;
     static final String URL = "https://ajax.googleapis.com/ajax/services/search/images";
     ArrayList <ModelImage> images;
+    String query;
     /* Initialize Activity */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,8 +42,6 @@ public class ActivitySearch extends AppCompatActivity {
 
     /* Initialize reference to Views */
     private void setUpViews() {
-        etQuery = (EditText) findViewById(R.id.etQuery);
-        btnSearch = (Button) findViewById(R.id.btnSearch);
         gvResults = (GridView) findViewById(R.id.gvResults);
         images = new ArrayList<>();
         imgAdapter = new AdapterImage(this, images);
@@ -52,7 +50,6 @@ public class ActivitySearch extends AppCompatActivity {
 
     /* Set up Events for Activity */
     private void setUpEvents() {
-        setBtnSearch();
         int threshold = 2;
         int start = 0;
         int increment = 8;
@@ -61,35 +58,29 @@ public class ActivitySearch extends AppCompatActivity {
             @Override
             public void onLoadMore(int page, int totalItemsCount) {
                 RequestParams params = new RequestParams();
-                params.put("start", page);
-
-                params.put("v", 1.0);
-                params.put("rsz", 8);
-                params.put("q", etQuery.getText().toString());
                 if( totalItemsCount > 0) {
+                    params.put("start", page);
+                    params.put("v", 1.0);
+                    params.put("rsz", 8);
+                    params.put("q", query);
                     Log.i("test", "Page: " + page);
                     loadData(URL, params);
                 }
 
             }
         });
-    }
 
-    /* When the btnSearch is clicked */
-    public void setBtnSearch() {
-        btnSearch.setOnClickListener(new View.OnClickListener() {
+        gvResults.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onClick(View view) {
-                imgAdapter.clear();
-                String query = etQuery.getText().toString();
-                RequestParams params = new RequestParams();
-                params.put("q", query);
-                params.put("v", 1.0);
-                params.put("rsz", 8);
-                loadData(URL, params);
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                Intent intent = new Intent(getApplicationContext(), ActivityImageItem.class);
+                String url = images.get(i).url;
+                intent.putExtra("url", url);
+                startActivity(intent);
             }
         });
     }
+
 
     /* Load Data */
     private void loadData(String URL, RequestParams params){
@@ -123,6 +114,26 @@ public class ActivitySearch extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_search, menu);
+        MenuItem searchItem = menu.findItem(R.id.action_search);
+        android.support.v7.widget.SearchView searchView = (android.support.v7.widget.SearchView) MenuItemCompat.getActionView(searchItem);
+        searchView.setOnQueryTextListener(new android.support.v7.widget.SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String q) {
+                query = q;
+                imgAdapter.clear();
+                RequestParams params = new RequestParams();
+                params.put("q", query);
+                params.put("v", 1.0);
+                params.put("rsz", 8);
+                loadData(URL, params);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
+        });
         return true;
     }
 
