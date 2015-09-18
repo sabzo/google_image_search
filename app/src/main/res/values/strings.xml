@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">ImageSearch</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="hint_search">What do you want to find?</string>
+    <string name="search">Search</string>
+</resources>
