@@ -1,6 +1,8 @@
 package com.imagesearch.ui;
 
 import android.content.Intent;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -26,11 +28,9 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 
 public class ActivitySearch extends AppCompatActivity {
-    GridView gvResults;
-    AdapterImage imgAdapter;
-    static final String URL = "https://ajax.googleapis.com/ajax/services/search/images";
-    ArrayList <ModelImage> images;
+
     String query;
+    FragmentSearchResults fs = null;
     /* Initialize Activity */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,77 +38,26 @@ public class ActivitySearch extends AppCompatActivity {
         setContentView(R.layout.activity_search);
         setUpViews();
         setUpEvents();
+        loadFirstFragment();
     }
 
     /* Initialize reference to Views */
     private void setUpViews() {
-        gvResults = (GridView) findViewById(R.id.gvResults);
-        images = new ArrayList<>();
-        imgAdapter = new AdapterImage(this, images);
-        gvResults.setAdapter(imgAdapter);
+        // Only View matters is FrameLayout already set in XML
     }
 
     /* Set up Events for Activity */
     private void setUpEvents() {
-        int threshold = 2;
-        int start = 0;
-        int increment = 8;
-        int end = 56;
-        gvResults.setOnScrollListener(new EndlessScrollerListener(threshold, start, increment, end) {
-            @Override
-            public void onLoadMore(int page, int totalItemsCount) {
-                RequestParams params = new RequestParams();
-                if( totalItemsCount > 0) {
-                    params.put("start", page);
-                    params.put("v", 1.0);
-                    params.put("rsz", 8);
-                    params.put("q", query);
-                    Log.i("test", "Page: " + page);
-                    loadData(URL, params);
-                }
-
-            }
-        });
-
-        gvResults.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                Intent intent = new Intent(getApplicationContext(), ActivityImageItem.class);
-                String url = images.get(i).url;
-                intent.putExtra("url", url);
-                startActivity(intent);
-            }
-        });
+        // Nothing right now
     }
 
-
-    /* Load Data */
-    private void loadData(String URL, RequestParams params){
-        GoogleImageRestClient.get(URL, params,
-                //callback
-                new JsonHttpResponseHandler() {
-                    @Override
-                    public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                        Log.i("Debug", response.toString());
-                        JSONArray jsonImages;
-                        try {
-                            jsonImages = response.getJSONObject("responseData").getJSONArray("results");
-                            imgAdapter.addAll(ModelImage.fromJSONArray(jsonImages));
-                            imgAdapter.notifyDataSetChanged();
-                        } catch (JSONException e) {
-                            Log.i("test", e.toString());
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(int statusCode, Header[] headers, String
-                            responseString, Throwable throwable) {
-                        Toast.makeText(getApplicationContext(), "Failed to load images", Toast.LENGTH_LONG);
-                        super.onFailure(statusCode, headers, responseString, throwable);
-                    }
-                }
-        );
+    private void loadFirstFragment(){
+        FragmentManager fm = getSupportFragmentManager();
+        FragmentTransaction ft = fm.beginTransaction();
+        ft.replace(R.id.flSearchPlaceHolder, new FragmentSearch());
+        ft.commit();
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -119,13 +68,15 @@ public class ActivitySearch extends AppCompatActivity {
         searchView.setOnQueryTextListener(new android.support.v7.widget.SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String q) {
-                query = q;
-                imgAdapter.clear();
-                RequestParams params = new RequestParams();
-                params.put("q", query);
-                params.put("v", 1.0);
-                params.put("rsz", 8);
-                loadData(URL, params);
+                if(fs != null) {
+                    Log.i("test", "fs == null");
+                    fs = new FragmentSearchResults();
+                    FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+                    ft.replace(R.id.flSearchPlaceHolder, fs);
+                    ft.commit();
+                }
+
+               // TODO send query to Activity
                 return true;
             }
 

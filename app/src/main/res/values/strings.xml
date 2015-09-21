@@ -5,4 +5,7 @@
     <string name="hint_search">What do you want to find?</string>
     <string name="search">Search</string>
     <string name="title_activity_activity_full_screen">ActivityFullScreen</string>
+
+<!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
