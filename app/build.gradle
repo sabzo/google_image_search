@@ -19,18 +19,15 @@ android {
     }
 }
 
-repositories {
-    maven {
-        url 'https://oss.sonatype.org/content/repositories/snapshots/'
-    }
-}
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.android.support:appcompat-v7:22.2.0'
-    //compile 'com.loopj.android:android-async-http:1.4.8'
-    compile files('libs/org.apache.http.legacy.jar')
-    compile 'com.loopj.android:android-async-http:1.4.9-SNAPSHOT'
     compile 'com.etsy.android.grid:library:1.0.5'
     compile files('libs/picasso-2.5.2.jar')
+    // Seems I need to  both compile 1.4.9 and add 1.4.9 as a library in app/libs
+    compile 'com.loopj.android:android-async-http:1.4.9'
+    compile files('libs/android-async-http-1.4.9.jar')
 }
+
+

@@ -10,11 +10,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.GridView;
-import android.widget.Toast;
 
 import com.imagesearch.R;
 import com.imagesearch.network.GoogleImageRestClient;
 import com.loopj.android.http.JsonHttpResponseHandler;
+import cz.msebera.android.httpclient.Header;
 import com.loopj.android.http.RequestParams;
 
 import org.json.JSONArray;
@@ -23,7 +23,6 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-import cz.msebera.android.httpclient.Header;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -34,39 +33,57 @@ public class FragmentSearchResults extends android.support.v4.app.Fragment {
     // Result View
     GridView gvResults;
     AdapterImage imgAdapter;
+    // Global query
+    String query = "";
     // Images to be displayed
     ArrayList <ModelImage> images;
     // Required empty public constructor
     public FragmentSearchResults() {}
+    public static FragmentSearchResults newInstance(String query) {
+      FragmentSearchResults fsr = new FragmentSearchResults();
+        Bundle args = new Bundle();
+        args.putString("query", query);
+        // A fragment can accept Bundle arguments
+        fsr.setArguments(args);
+      return fsr;
+
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        RequestParams p;
         images = new ArrayList<>();
         // Using the Attaching Activity for the context
         imgAdapter = new AdapterImage(getActivity(), images);
 
-        ///query = q;
+        query = getArguments().getString("query");
         imgAdapter.clear();
+
         RequestParams params = new RequestParams();
-       //params.put("q", query);
+        params.put("q", query);
         params.put("v", 1.0);
         params.put("rsz", 8);
         loadData(URL, params);
+
+
     }
 
+    /* Only used for Layout Inflation */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        gvResults = (GridView) container.findViewById(R.id.gvResults);
-        gvResults.setAdapter(imgAdapter);
-        return inflater.inflate(R.layout.fragment_search_results, container, false);
+        View view =  inflater.inflate(R.layout.fragment_search_results, container, false);
+        return view;
     }
 
+    /* Ensures fragment's root view isn't null */
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
-            /* Set up Events for Activity */
+        /* Set up Events for Activity */
+        gvResults = (GridView) view.findViewById(R.id.gvResults);
+        gvResults.setAdapter(imgAdapter);
         setUpEvents();
         super.onViewCreated(view, savedInstanceState);
     }
@@ -84,9 +101,9 @@ public class FragmentSearchResults extends android.support.v4.app.Fragment {
                     params.put("start", page);
                     params.put("v", 1.0);
                     params.put("rsz", 8);
-                   // params.put("q", query);
+                    params.put("q", query);
                     Log.i("test", "Page: " + page);
-                    //loadData(URL, params);
+                    loadData(URL, params);
                 }
 
             }
@@ -108,6 +125,7 @@ public class FragmentSearchResults extends android.support.v4.app.Fragment {
         GoogleImageRestClient.get(URL, params,
                 //callback
                 new JsonHttpResponseHandler() {
+
                     @Override
                     public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                         Log.i("Debug", response.toString());
@@ -122,11 +140,10 @@ public class FragmentSearchResults extends android.support.v4.app.Fragment {
                     }
 
                     @Override
-                    public void onFailure(int statusCode, Header[] headers, String
-                            responseString, Throwable throwable) {
-                        Toast.makeText(getActivity(), "Failed to load images", Toast.LENGTH_LONG);
-                        super.onFailure(statusCode, headers, responseString, throwable);
+                    public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                        super.onFailure(statusCode, headers, throwable, errorResponse);
                     }
+
                 }
         );
     }

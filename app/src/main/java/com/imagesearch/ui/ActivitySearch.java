@@ -1,36 +1,21 @@
 package com.imagesearch.ui;
 
-import android.content.Intent;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.GridView;
-import android.widget.Toast;
+
 
 import com.imagesearch.R;
-import com.imagesearch.network.GoogleImageRestClient;
-import com.loopj.android.http.JsonHttpResponseHandler;
-import com.loopj.android.http.RequestParams;
+import com.loopj.android.http.*;
 
 import cz.msebera.android.httpclient.Header;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.ArrayList;
-
 public class ActivitySearch extends AppCompatActivity {
 
-    String query;
-    FragmentSearchResults fs = null;
     /* Initialize Activity */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +23,7 @@ public class ActivitySearch extends AppCompatActivity {
         setContentView(R.layout.activity_search);
         setUpViews();
         setUpEvents();
+        RequestParams r = new RequestParams();
         loadFirstFragment();
     }
 
@@ -67,16 +53,10 @@ public class ActivitySearch extends AppCompatActivity {
         android.support.v7.widget.SearchView searchView = (android.support.v7.widget.SearchView) MenuItemCompat.getActionView(searchItem);
         searchView.setOnQueryTextListener(new android.support.v7.widget.SearchView.OnQueryTextListener() {
             @Override
-            public boolean onQueryTextSubmit(String q) {
-                if(fs != null) {
-                    Log.i("test", "fs == null");
-                    fs = new FragmentSearchResults();
-                    FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-                    ft.replace(R.id.flSearchPlaceHolder, fs);
-                    ft.commit();
-                }
-
-               // TODO send query to Activity
+            public boolean onQueryTextSubmit(String query) {
+                FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+                ft.replace(R.id.flSearchPlaceHolder, FragmentSearchResults.newInstance(query));
+                ft.commit();
                 return true;
             }
 
