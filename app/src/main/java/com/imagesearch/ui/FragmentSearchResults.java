@@ -2,14 +2,20 @@ package com.imagesearch.ui;
 
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.os.Environment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.GridView;
+import android.widget.ImageView;
 
 import com.imagesearch.R;
 import com.imagesearch.network.GoogleImageRestClient;
@@ -21,6 +27,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 
 
@@ -65,8 +74,6 @@ public class FragmentSearchResults extends android.support.v4.app.Fragment {
         params.put("v", 1.0);
         params.put("rsz", 8);
         loadData(URL, params);
-
-
     }
 
     /* Only used for Layout Inflation */
@@ -93,11 +100,12 @@ public class FragmentSearchResults extends android.support.v4.app.Fragment {
         int start = 0;
         int increment = 8;
         int end = 56;
+
         gvResults.setOnScrollListener(new EndlessScrollerListener(threshold, start, increment, end) {
             @Override
             public void onLoadMore(int page, int totalItemsCount) {
                 RequestParams params = new RequestParams();
-                if (totalItemsCount > 0) {
+                if( totalItemsCount > 0) {
                     params.put("start", page);
                     params.put("v", 1.0);
                     params.put("rsz", 8);
@@ -116,6 +124,14 @@ public class FragmentSearchResults extends android.support.v4.app.Fragment {
                 String url = images.get(i).url;
                 intent.putExtra("url", url);
                 startActivity(intent);
+            }
+        });
+
+        gvResults.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int pos, long i) {
+                shareImage(view);
+                return true;
             }
         });
     }
@@ -147,4 +163,52 @@ public class FragmentSearchResults extends android.support.v4.app.Fragment {
                 }
         );
     }
+
+    // Can be triggered by a view event such as a button press
+    public void shareImage(View v) {
+        // Get access to bitmap image from view
+        ImageView ivImage = (ImageView) v.findViewById(R.id.ivImage);
+        // Get access to the URI for the bitmap
+        Uri bmpUri = getLocalBitmapUri(ivImage);
+        if (bmpUri != null) {
+            // Construct a ShareIntent with link to image
+            Intent shareIntent = new Intent();
+            shareIntent.setAction(Intent.ACTION_SEND);
+            shareIntent.putExtra(Intent.EXTRA_STREAM, bmpUri);
+            shareIntent.setType("image/*");
+            // Launch sharing dialog for image
+            startActivity(Intent.createChooser(shareIntent, "Share Image"));
+        } else {
+            Log.i("test", "unable to share image");
+            // ...sharing failed, handle error
+        }
+    }
+
+    // Returns the URI path to the Bitmap displayed in specified ImageView
+    public Uri getLocalBitmapUri(ImageView imageView) {
+        // Extract Bitmap from ImageView drawable
+        Drawable drawable = imageView.getDrawable();
+        Bitmap bmp = null;
+        if (drawable instanceof BitmapDrawable){
+            bmp = ((BitmapDrawable) imageView.getDrawable()).getBitmap();
+        } else {
+            Log.i("test", "break at 195");
+            return null;
+        }
+        // Store image to default external storage directory
+        Uri bmpUri = null;
+        try {
+            File file =  new File(Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_DOWNLOADS), "share_image_" + System.currentTimeMillis() + ".png");
+            file.getParentFile().mkdirs();
+            FileOutputStream out = new FileOutputStream(file);
+            bmp.compress(Bitmap.CompressFormat.PNG, 90, out);
+            out.close();
+            bmpUri = Uri.fromFile(file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return bmpUri;
+    }
+
 }

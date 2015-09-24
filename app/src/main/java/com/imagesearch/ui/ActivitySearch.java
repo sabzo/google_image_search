@@ -1,5 +1,8 @@
 package com.imagesearch.ui;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.MenuItemCompat;
@@ -7,14 +10,14 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 
 import com.imagesearch.R;
-import com.loopj.android.http.*;
 
-import cz.msebera.android.httpclient.Header;
 
 public class ActivitySearch extends AppCompatActivity {
+
 
     /* Initialize Activity */
     @Override
@@ -23,8 +26,15 @@ public class ActivitySearch extends AppCompatActivity {
         setContentView(R.layout.activity_search);
         setUpViews();
         setUpEvents();
-        RequestParams r = new RequestParams();
         loadFirstFragment();
+    }
+
+    @Override
+    protected void onResume() {
+        if(! isNetworkAvailable() ) {
+            Toast.makeText(this, "Internet Not Available", Toast.LENGTH_LONG).show();
+        }
+        super.onResume();
     }
 
     /* Initialize reference to Views */
@@ -77,5 +87,11 @@ public class ActivitySearch extends AppCompatActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private Boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnectedOrConnecting();
     }
 }
