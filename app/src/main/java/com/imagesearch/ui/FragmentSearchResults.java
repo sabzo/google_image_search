@@ -7,7 +7,6 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.app.Fragment;
 import android.os.Environment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -33,9 +32,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 
-/**
- * A simple {@link Fragment} subclass.
- */
+/* Fragment for Displaying Search Results */
 public class FragmentSearchResults extends android.support.v4.app.Fragment {
     // API URL
     static final String URL = "https://ajax.googleapis.com/ajax/services/search/images";
@@ -46,13 +43,14 @@ public class FragmentSearchResults extends android.support.v4.app.Fragment {
     String query = "";
     // Images to be displayed
     ArrayList <ModelImage> images;
+    RequestParams params = null;
     // Required empty public constructor
     public FragmentSearchResults() {}
+    /* Static function to allow fragment to accept arguments */
     public static FragmentSearchResults newInstance(String query) {
       FragmentSearchResults fsr = new FragmentSearchResults();
         Bundle args = new Bundle();
         args.putString("query", query);
-        // A fragment can accept Bundle arguments
         fsr.setArguments(args);
       return fsr;
 
@@ -61,15 +59,15 @@ public class FragmentSearchResults extends android.support.v4.app.Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        RequestParams p;
         images = new ArrayList<>();
-        // Using the Attaching Activity for the context
+        // Array Adapter pattern: context, data source (or cursor)
         imgAdapter = new AdapterImage(getActivity(), images);
-
+        // Retrieve Bundle Arguments, in this instance the Query
         query = getArguments().getString("query");
         imgAdapter.clear();
 
-        RequestParams params = new RequestParams();
+        // Android-Async-Http specific class (RequestParams)
+        params = new RequestParams();
         params.put("q", query);
         params.put("v", 1.0);
         params.put("rsz", 8);
@@ -113,7 +111,6 @@ public class FragmentSearchResults extends android.support.v4.app.Fragment {
                     Log.i("test", "Page: " + page);
                     loadData(URL, params);
                 }
-
             }
         });
 
@@ -127,21 +124,24 @@ public class FragmentSearchResults extends android.support.v4.app.Fragment {
             }
         });
 
+        /* When an item is clicked (an image) allow it to be sent */
         gvResults.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> adapterView, View view, int pos, long i) {
+                // view is the actual view that was clicked. Remember a view can be a ViewGroup as well
                 shareImage(view);
                 return true;
             }
         });
     }
 
-    /* Load Data */
-    private void loadData(String URL, RequestParams params){
-        GoogleImageRestClient.get(URL, params,
-                //callback
-                new JsonHttpResponseHandler() {
+    /* Method to make an API request and load data into the Array adapter.
+     * Making this public because Activity will need to call Load externally
+     */
+    public void loadData(String URL, RequestParams params){
 
+        GoogleImageRestClient.get(URL, params,
+                new JsonHttpResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                         Log.i("Debug", response.toString());
@@ -166,7 +166,8 @@ public class FragmentSearchResults extends android.support.v4.app.Fragment {
 
     // Can be triggered by a view event such as a button press
     public void shareImage(View v) {
-        // Get access to bitmap image from view
+        // Get access to bitmap image from view. In this case view is a ViewGroup
+        // an ImageView must be extracted from the ViewGroup `adapter_image.xml`
         ImageView ivImage = (ImageView) v.findViewById(R.id.ivImage);
         // Get access to the URI for the bitmap
         Uri bmpUri = getLocalBitmapUri(ivImage);
@@ -180,19 +181,18 @@ public class FragmentSearchResults extends android.support.v4.app.Fragment {
             startActivity(Intent.createChooser(shareIntent, "Share Image"));
         } else {
             Log.i("test", "unable to share image");
-            // ...sharing failed, handle error
         }
     }
 
+
     // Returns the URI path to the Bitmap displayed in specified ImageView
-    public Uri getLocalBitmapUri(ImageView imageView) {
+    private Uri getLocalBitmapUri(ImageView imageView) {
         // Extract Bitmap from ImageView drawable
         Drawable drawable = imageView.getDrawable();
         Bitmap bmp = null;
         if (drawable instanceof BitmapDrawable){
             bmp = ((BitmapDrawable) imageView.getDrawable()).getBitmap();
         } else {
-            Log.i("test", "break at 195");
             return null;
         }
         // Store image to default external storage directory
