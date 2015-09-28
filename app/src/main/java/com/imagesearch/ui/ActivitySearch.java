@@ -107,23 +107,22 @@ public class ActivitySearch extends AppCompatActivity {
                 FragmentSearchResults fsr = (FragmentSearchResults) getSupportFragmentManager().findFragmentByTag("SEARCH_RESULTS");
                     RequestParams params = new RequestParams();
                     params.put("q", fsr.query);
+                    params.put("start", 0);
                     params.put("v", 1.0);
                     params.put("rsz", 8);
-                    if( imageSize != "any" ) params.put("imgsz", imageSize);
-                    if( colorFilter != "any" ) params.put("imgcolor", colorFilter);
-                    if( imageType != "any") params.put("imgtype", imageType);
-                    if ( siteFilter != "any" ) params.put("as_sitesearch", siteFilter);
-                    Log.i("test", "Now searching");
-                Toast.makeText(this, "saved settings", Toast.LENGTH_SHORT).show();
+                    if( !imageSize.equals( "any") ) params.put("imgsz", imageSize);
+                    if( !colorFilter .equals( "any")  ) params.put("imgcolor", colorFilter);
+                    if( !imageType.equals( "any") ) params.put("imgtype", imageType);
+                    if ( !siteFilter .equals( "any")  ) params.put("as_sitesearch", siteFilter);
+                    // remove all images and use new search settings
+                    fsr.imgAdapter.clear();
                     fsr.loadData(fsr.URL, params);
             } catch (Exception e) {
                 Log.i("test",  "FragmentSearchResults not created");
                 Toast.makeText(this, e.toString(), Toast.LENGTH_LONG).show();
             }
 
-
         }
-
 
     }
 

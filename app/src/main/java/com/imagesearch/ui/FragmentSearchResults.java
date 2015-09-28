@@ -15,6 +15,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.imagesearch.R;
 import com.imagesearch.network.GoogleImageRestClient;
@@ -139,7 +140,7 @@ public class FragmentSearchResults extends android.support.v4.app.Fragment {
      * Making this public because Activity will need to call Load externally
      */
     public void loadData(String URL, RequestParams params){
-
+    Log.i("test", "fsr.142: " + URL + ": " + params.toString());
         GoogleImageRestClient.get(URL, params,
                 new JsonHttpResponseHandler() {
                     @Override
@@ -151,15 +152,16 @@ public class FragmentSearchResults extends android.support.v4.app.Fragment {
                             imgAdapter.addAll(ModelImage.fromJSONArray(jsonImages));
                             imgAdapter.notifyDataSetChanged();
                         } catch (JSONException e) {
+                            Log.i("test", "json exception");
                             Log.i("test", e.toString());
                         }
                     }
 
                     @Override
                     public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                        Toast.makeText(getActivity(), errorResponse.toString(), Toast.LENGTH_LONG).show();
                         super.onFailure(statusCode, headers, throwable, errorResponse);
                     }
-
                 }
         );
     }
